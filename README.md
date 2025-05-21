@@ -1,5 +1,5 @@
 
-## Установите Minikube (если ещё не установлен)
+## Установите Minikube 
 bash
 curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64sudo install minikube-linux-amd64 /usr/local/bin/minikube
 
@@ -27,5 +27,4 @@ bash
 chmod +x deploy.sh
 
 ## Запуск скрипта развертывания
-bash
-sh deploy.sh
+bash deploy.sh
