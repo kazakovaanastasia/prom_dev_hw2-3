@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: journal-api
+  namespace: journal-system
+  labels:
+    app: journal-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: journal-api
+      role: prod
+  template:
+    metadata:
+      labels:
+        app: journal-api
+        role: prod
+    spec:
+      containers:
+      - name: journal-api
+        image: journal-api:v1
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8000
+          name: http
+        env:
+        - name: APP_GREETING
+          valueFrom:
+            configMapKeyRef:
+              name: journal-config
+              key: APP_GREETING
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: journal-config
+              key: LOG_LEVEL
+        volumeMounts:
+        - name: journal-storage
+          mountPath: /srv/journals
+        livenessProbe:
+          httpGet:
+            path: /status
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 15
+        readinessProbe:
+          httpGet:
+            path: /status
+            port: 8000
+          initialDelaySeconds: 3
+          periodSeconds: 10
+      volumes:
+      - name: journal-storage
+        emptyDir: {}

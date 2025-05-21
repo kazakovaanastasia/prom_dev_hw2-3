@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: journal-config
+  namespace: journal-system
+data:
+  APP_GREETING: "hi!!!"
+  LOG_LEVEL: "INFO"

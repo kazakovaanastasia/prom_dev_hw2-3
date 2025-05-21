@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: journal-archive-pv
+  labels:
+    type: local
+spec:
+  storageClassName: standard
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/journal-archives"
+  persistentVolumeReclaimPolicy: Retain #Added this line
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: journal-archive-pvc
+  namespace: journal-system
+spec:
+  storageClassName: standard
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi

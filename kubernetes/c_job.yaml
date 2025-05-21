@@ -1,0 +1,52 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: log-backup-task
+  namespace: journal-system
+  labels:
+    component: log-archiver
+spec:
+  concurrencyPolicy: Forbid
+  schedule: "10,25,40,55 * * * *"
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          containers:
+          - name: backup-agent
+            image: alpine:3.17.3
+            command:
+            - /bin/ash
+            - "-ec"
+            - |
+              apk upgrade --no-cache && \
+              apk add --no-cache tar curl jq && \
+              apk del jq
+              
+              WORK_DIR=/temp/backup
+              mkdir -p ${WORK_DIR}
+              
+              CURRENT_TIMESTAMP=$(date +'%Y-%m-%d_%H-%M')
+              LOG_SOURCE="http://journal-api-service.journal-system/entries"
+              
+              echo "[$(date +%T)] Starting backup operation..."
+              curl -s "${LOG_SOURCE}" -o ${WORK_DIR}/combined.log
+              
+              echo "Compressing data..."
+              tar --create --gzip --file=/archive/logs_${CURRENT_TIMESTAMP}.tgz \
+                --directory=${WORK_DIR} .
+              
+              echo "Verifying archive:"
+              tar -tzf /archive/logs_${CURRENT_TIMESTAMP}.tgz
+              
+              rm -rf ${WORK_DIR}
+            volumeMounts:
+            - name: archive-storage
+              mountPath: /archive
+              readOnly: false
+          restartPolicy: Never
+          volumes:
+          - name: archive-storage
+            persistentVolumeClaim:
+              claimName: journal-archive-pvc

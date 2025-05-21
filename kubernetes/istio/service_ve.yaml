@@ -1,0 +1,56 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: journal-virtualservice
+  namespace: journal-system
+spec:
+  gateways:
+    - journal-gateway
+  hosts:
+    - "*"
+  http:
+    - fault:
+        abort:
+          httpStatus: 404
+          percentage:
+            value: 100
+      route:
+        - destination:
+            host: journal-api-service
+            port:
+              number: 80
+
+    - match:
+        - method:
+            exact: POST
+          uri:
+            exact: /log
+      fault:
+        delay:
+          fixedDelay: 2s
+          percentage:
+            value: 100
+      retries:
+        perTryTimeout: 0.5s
+        attempts: 2
+      route:
+        - destination:
+            host: journal-api-service
+            port:
+              number: 80
+      timeout: 1s
+
+    - match:
+        - uri:
+            exact: /
+        - uri:
+            exact: /status
+        - uri:
+            prefix: /logs
+        - uri:
+            exact: /metrics
+      route:
+        - destination:
+            host: journal-api-service
+            port:
+              number: 80
